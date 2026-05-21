@@ -11,7 +11,7 @@ const Login = ({ setAuth }) => {
     e.preventDefault();
     try {
       // Configuraremos axios para apuntar al backend local después
-      const response = await axios.post('/api/auth/login', {
+      const response = await axios.post('https://servidor-2j2q.onrender.com/api/auth/login', {
         username,
         password
       });

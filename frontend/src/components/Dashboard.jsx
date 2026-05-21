@@ -20,7 +20,7 @@ const Dashboard = ({ setAuth }) => {
 
     const token = localStorage.getItem('token');
     const api = axios.create({
-        baseURL: '/api',
+        baseURL: 'https://servidor-2j2q.onrender.com/api',
         headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -181,7 +181,7 @@ const Dashboard = ({ setAuth }) => {
                                         {file.originalname}
                                     </div>
                                     <div className="flex gap-2">
-                                        <a href={`/api/files/${file.id}/download`} download target="_blank" rel="noreferrer" className="p-1.5 bg-white/20 hover:bg-blue-500 rounded-full text-white backdrop-blur-sm transition-colors">
+                                        <a href={`https://servidor-2j2q.onrender.com/api/files/${file.id}/download`} download target="_blank" rel="noreferrer" className="p-1.5 bg-white/20 hover:bg-blue-500 rounded-full text-white backdrop-blur-sm transition-colors">
                                             <Download className="w-4 h-4" />
                                         </a>
                                         <button onClick={() => deleteFile(file.id)} className="p-1.5 bg-white/20 hover:bg-red-500 rounded-full text-white backdrop-blur-sm transition-colors">
