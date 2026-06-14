@@ -4,6 +4,6 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://<backend-url>/api/:splat"
+  to = "https://servidor-iigs.onrender.com/api/:splat"
   status = 200
   force = true
