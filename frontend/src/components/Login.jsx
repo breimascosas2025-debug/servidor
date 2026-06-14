@@ -1,77 +1,133 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { Cloud, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+import { Lock, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
+import './Login.css';
 
-const Login = ({ setAuth }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      // Configuraremos axios para apuntar al backend local después
-      const response = await axios.post('https://servidor-2j2q.onrender.com/api/auth/login', {
-        username,
-        password
-      });
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('username', response.data.username);
-      setAuth(true);
-    } catch (err) {
-      setError('Credenciales incorrectas');
-    }
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setMessage('');
+        setLoading(true);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-700">
-        <div className="text-center flex flex-col items-center">
-          <div className="bg-brand-900/50 p-4 rounded-full mb-4 relative">
-            <Cloud className="w-12 h-12 text-brand-400" />
-            <Lock className="w-5 h-5 text-brand-400 absolute bottom-3 right-3 bg-slate-800 rounded-full border border-brand-900" />
-          </div>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">Nube Personal</h2>
-          <p className="mt-2 text-sm text-slate-400">Accede a tus fotos y videos</p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-600 bg-slate-700 placeholder-slate-400 text-white rounded-t-lg focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm"
-                placeholder="Usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-600 bg-slate-700 placeholder-slate-400 text-white rounded-b-lg focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
+        try {
+            if (isSignUp) {
+                const { data, error: signUpError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                });
+                if (signUpError) throw signUpError;
+                // Si Supabase requiere confirmación de email
+                if (data.user && !data.session) {
+                    setMessage('✅ Cuenta creada. Revisa tu correo para confirmar, o intenta iniciar sesión.');
+                } else {
+                    navigate('/explorer');
+                }
+            } else {
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (signInError) throw signInError;
+                navigate('/explorer');
+            }
+        } catch (err) {
+            if (err.message === 'Invalid login credentials') {
+                setError('Correo o contraseña incorrectos');
+            } else if (err.message === 'User already registered') {
+                setError('Este correo ya está registrado. Inicia sesión.');
+            } else {
+                setError(err.message || 'Error de autenticación');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
-          {error && <p className="text-red-500 text-sm text-center font-medium">{error}</p>}
-
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all"
+    return (
+        <div className="login-container">
+            <motion.div 
+                className="glass-panel login-box"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20
+                }}
             >
-              Entrar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+                <div className="login-header">
+                    <img src="/logo.png" alt="Almacén Digital" className="login-logo" />
+                    <h2>Almacén Digital</h2>
+                    <p>Tu nube personal privada</p>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="login-form">
+                    {error && <div className="error-msg">{error}</div>}
+                    {message && <div className="success-msg">{message}</div>}
+                    
+                    <div className="input-group">
+                        <Mail className="input-icon" size={20} />
+                        <input 
+                            type="email" 
+                            className="input-field" 
+                            placeholder="Correo electrónico" 
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="input-group">
+                        <Lock className="input-icon" size={20} />
+                        <input 
+                            type="password" 
+                            className="input-field" 
+                            placeholder="Contraseña (mín. 6 caracteres)" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            minLength={6}
+                        />
+                    </div>
+
+                    <motion.button 
+                        type="submit" 
+                        className="btn login-btn"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        disabled={loading}
+                    >
+                        {loading ? 'Cargando...' : (isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión')}
+                    </motion.button>
+                </form>
+
+                <div className="auth-toggle">
+                    <p>
+                        {isSignUp ? '¿Ya tienes cuenta? ' : '¿No tienes cuenta? '}
+                        <button 
+                            type="button"
+                            className="toggle-btn" 
+                            onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage(''); }}
+                        >
+                            {isSignUp ? 'Inicia Sesión' : 'Regístrate'}
+                        </button>
+                    </p>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
 
 export default Login;
