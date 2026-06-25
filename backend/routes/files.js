@@ -11,8 +11,12 @@ const {
   getBucketSize,
 } = require('../utils/supabaseStorage');
 const { checkQuota, QUOTA_LIMIT } = require('../utils/storage');
+const fs = require('fs-extra');
+const path = require('path');
 
-        
+const storage = multer.diskStorage({
+    destination: async (req, file, cb) => {
+        const relativePath = file.webkitRelativePath ? path.dirname(file.webkitRelativePath) : '';
         const targetPath = path.join(req.storageDir, req.query.path || '', relativePath);
         await fs.ensureDir(targetPath);
         cb(null, targetPath);

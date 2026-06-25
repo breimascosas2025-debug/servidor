@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseKey || !storageBucket) {
   console.error('Supabase configuration missing in .env');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 /**
  * Upload a file (multer temporary file) to Supabase storage.
